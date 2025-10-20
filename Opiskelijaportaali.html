@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KaljaKalenteri</title>
+  <style>
+    :root{--bg:#f7fafc;--card:#ffffff;--muted:#6b7280;--accent:#4f46e5;--radius:14px}
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#0f172a}
+    .container{max-width:1100px;margin:32px auto;padding:20px}
+    header{margin-bottom:20px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:6px 0 0;color:var(--muted)}
+
+    .grid{display:grid;gap:18px}
+    @media(min-width:1024px){.grid{grid-template-columns:320px 1fr}}
+
+    .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+    .profile-row{display:flex;gap:12px;align-items:center}
+    .avatar{width:64px;height:64px;border-radius:50%;background:#e6e7f8;display:flex;align-items:center;justify-content:center;font-weight:600;color:#4c51bf;overflow:hidden}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid #e6e7f8;background:#fff;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff;border:none}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* Calendar */
+    .cal-controls{display:flex;align-items:center;justify-content:space-between}
+    .cal-week{display:grid;grid-template-columns:repeat(7,1fr);margin-top:12px;gap:8px}
+    .weekday{font-size:12px;color:var(--muted);text-align:center}
+    .day{height:84px;border-radius:10px;background:transparent;border:1px solid transparent;padding:8px;text-align:left;display:flex;flex-direction:column;justify-content:space-between}
+    .day.out{opacity:0.38}
+    .day.selected{outline:3px solid rgba(79,70,229,0.12);background:linear-gradient(180deg,#fbfcff, #fff)}
+    .day .num{font-weight:600}
+    .badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px}
+
+    /* Events list */
+    .events .ev{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;border:1px solid #f1f5f9}
+    .ev .title{font-weight:600}
+    .ev small{color:var(--muted)}
+
+    /* Forms */
+    input[type="text"], input[type="time"], textarea, input[type="email"]{width:100%;padding:8px;border-radius:8px;border:1px solid #e6edf3}
+    textarea{min-height:72px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center}
+    .modal{width:100%;max-width:520px}
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Kalenteri &amp; tapahtumat — HTML-pohja</h1>
+      <p class="lead">Kopioi tämä tiedosto Visual Studio / VS Code -projektiin ja avaa selaimessa. Tapahtumat ja profiili tallentuvat localStorageen.</p>
+    </header>
+
+    <div class="grid">
+      <aside class="card">
+        <div class="profile-row">
+          <div id="avatarPreview" class="avatar">P</div>
+          <div style="flex:1">
+            <div id="profileName" style="font-weight:700">Ei nimeä</div>
+            <div id="profileEmail" class="muted">Ei sähköpostia</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" id="profileBio" class="muted">Lisää lyhyt bio profiiliisi klikkaamalla &quot;Muokkaa profiilia&quot;.</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="editProfileBtn" class="btn">Muokkaa profiilia</button>
+          <button id="clearDataBtn" class="btn">Tyhjennä tiedot</button>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #f1f5f9">
+
+        <div>
+          <h3 style="margin:0 0 8px 0">Lisää tapahtuma</h3>
+          <div style="margin-bottom:8px" class="muted" id="selectedDateLabel">Valittu päivä: —</div>
+          <input id="evTitle" type="text" placeholder="Otsikko" />
+          <div style="height:8px"></div>
+          <input id="evTime" type="time" />
+          <div style="height:8px"></div>
+          <textarea id="evDesc" placeholder="Kuvaus (valinnainen)"></textarea>
+          <div style="height:10px"></div>
+          <div style="display:flex;gap:8px">
+            <button id="addEvBtn" class="btn primary">Lisää</button>
+            <button id="clearFormBtn" class="btn">Tyhjennä</button>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #f1f5f9">
+        <div class="muted" style="font-size:13px">Tapahtumat tallentuvat vain selaimeen. Voit laajentaa palvelin-tallennuksella (esim. Firebase tai oma API).</div>
+      </aside>
+
+      <main>
+        <div class="card">
+          <div class="cal-controls">
+            <div>
+              <button id="prevBtn" class="btn">◀</button>
+              <button id="nextBtn" class="btn">▶</button>
+            </div>
+            <div style="font-weight:700" id="monthLabel">—</div>
+            <div class="muted">Klikkaa päivää valitaksesi</div>
+          </div>
+
+          <div class="cal-week" style="margin-top:14px">
+            <div class="weekday">Ma</div><div class="weekday">Ti</div><div class="weekday">Ke</div><div class="weekday">To</div><div class="weekday">Pe</div><div class="weekday">La</div><div class="weekday">Su</div>
+          </div>
+
+          <div id="calendarGrid" class="cal-week" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-top:0">Tapahtumat</h3>
+          <div id="eventsList" class="events muted">Valitse päivä nähdäksesi tapahtumat.</div>
+        </div>
+      </main>
+    </div>
+
+    <footer>Kaikkien rakastamaa kaljanjuontia ja hauskanpitoa Since 2025</footer>
+  </div>
+
+  <!-- Modal: profile -->
+  <div id="profileModal" style="display:none" class="modal-backdrop">
+    <div class="modal card">
+      <h3>Muokkaa profiilia</h3>
+      <div style="margin-top:10px">
+        <input id="pfName" type="text" placeholder="Nimi" />
+        <div style="height:8px"></div>
+        <input id="pfEmail" type="email" placeholder="Sähköposti" />
+        <div style="height:8px"></div>
+        <textarea id="pfBio" placeholder="Bio"></textarea>
+        <div style="height:8px"></div>
+        <label class="muted">Avatar (valinnainen):</label>
+        <input id="pfAvatar" type="file" accept="image/*" />
+        <div style="height:10px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button id="pfCancel" class="btn">Peruuta</button>
+          <button id="pfSave" class="btn primary">Tallenna</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* --- Utility --- */
+    const qs = (s, el=document) => el.querySelector(s);
+    const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+    /* --- State --- */
+    const state = {
+      current: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      selectedDate: (new Date()).toISOString().slice(0,10),
+      events: {},
+      profile: {}
+    };
+
+    /* --- Persistence --- */
+    function load(){
+      try{ state.events = JSON.parse(localStorage.getItem('events') || '{}'); }catch{ state.events = {}; }
+      try{ state.profile = JSON.parse(localStorage.getItem('profile') || '{}'); }catch{ state.profile = {}; }
+    }
+    function save(){ localStorage.setItem('events', JSON.stringify(state.events)); localStorage.setItem('profile', JSON.stringify(state.profile)); }
+
+    /* --- Profile UI --- */
+    function renderProfile(){
+      const p = state.profile || {};
+      qs('#profileName').textContent = p.name || 'Ei nimeä';
+      qs('#profileEmail').textContent = p.email || 'Ei sähköpostia';
+      qs('#profileBio').textContent = p.bio || 'Lisää lyhyt bio profiiliisi klikkaamalla "Muokkaa profiilia".';
+      const av = qs('#avatarPreview');
+      if(p.avatar){ av.innerHTML = `<img src="${p.avatar}" style="width:100%;height:100%;object-fit:cover">`; } else { av.textContent = (p.name && p.name[0]) ? p.name[0].toUpperCase() : 'P'; }
+    }
+
+    /* --- Calendar rendering --- */
+    function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+    function getMonthGrid(date){
+      const year = date.getFullYear(); const month = date.getMonth();
+      const firstDayWeekday = new Date(year, month, 1).getDay(); // 0 Sun ..6
+      const offset = (firstDayWeekday + 6) % 7; // Monday=0
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+      const cells = [];
+      for(let i=prevMonthDays - offset +1;i<=prevMonthDays;i++) cells.push({d:i,in:false,date:new Date(year,month-1,i)});
+      for(let i=1;i<=daysInMonth;i++) cells.push({d:i,in:true,date:new Date(year,month,i)});
+      let nextDay=1; while(cells.length<42){ cells.push({d:nextDay++,in:false,date:new Date(year,month+1,nextDay-1)}); }
+      return cells;
+    }
+
+    function renderCalendar(){
+      qs('#monthLabel').textContent = state.current.toLocaleString(undefined,{month:'long', year:'numeric'});
+      const grid = getMonthGrid(state.current);
+      const container = qs('#calendarGrid'); container.innerHTML='';
+      grid.forEach(cell =>{
+        const key = cell.date.toISOString().slice(0,10);
+        const div = document.createElement('button'); div.className='day' + (cell.in? '' : ' out') + (key===state.selectedDate? ' selected':'');
+        div.innerHTML = `<div><span class="num">${cell.d}</span> ${ (state.events[key] && state.events[key].length) ? `<span class="badge">${state.events[key].length}</span>` : '' }</div><div></div>`;
+        div.addEventListener('click', ()=>{ state.selectedDate = key; qs('#selectedDateLabel').textContent = 'Valittu päivä: ' + key; renderCalendar(); renderEvents(); });
+        container.appendChild(div);
+      });
+      qs('#selectedDateLabel').textContent = 'Valittu päivä: ' + state.selectedDate;
+    }
+
+    /* --- Events --- */
+    function renderEvents(){
+      const key = state.selectedDate; const list = qs('#eventsList'); list.innerHTML='';
+      const evs = state.events[key] || [];
+      if(evs.length===0){ list.textContent = 'Ei tapahtumia.'; list.classList.add('muted'); return; }
+      list.classList.remove('muted');
+      evs.forEach(ev=>{
+        const div = document.createElement('div'); div.className='ev';
+        div.innerHTML = `<div><div class="title">${escapeHtml(ev.title)} <small>${ev.time||''}</small></div><div class="muted">${escapeHtml(ev.desc||'')}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn" data-id="${ev.id}" data-date="${key}">Poista</button><button class="btn" data-copy="${escapeHtml(ev.title)} @ ${key} ${ev.time||''}">Kopioi</button></div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function addEvent(){
+      const title = qs('#evTitle').value.trim(); const time = qs('#evTime').value; const desc = qs('#evDesc').value.trim();
+      if(!title){ alert('Täytä otsikko.'); return; }
+      const key = state.selectedDate; const item = { id: Date.now(), title, time, desc };
+      state.events[key] = state.events[key] ? [...state.events[key], item] : [item]; save(); renderCalendar(); renderEvents(); qs('#evTitle').value=''; qs('#evTime').value=''; qs('#evDesc').value='';
+    }
+
+    function deleteEvent(date, id){ state.events[date] = (state.events[date]||[]).filter(e=>e.id!==id); if((state.events[date]||[]).length===0) delete state.events[date]; save(); renderCalendar(); renderEvents(); }
+
+    /* --- Helpers --- */
+    function escapeHtml(unsafe){ return String(unsafe).replace(/[&<>"]/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
+
+    /* --- Profile modal actions --- */
+    function openProfileModal(){ qs('#profileModal').style.display='flex'; qs('#pfName').value = state.profile.name || ''; qs('#pfEmail').value = state.profile.email || ''; qs('#pfBio').value = state.profile.bio || ''; }
+    function closeProfileModal(){ qs('#profileModal').style.display='none'; }
+    function saveProfile(){ const p = { name: qs('#pfName').value.trim(), email: qs('#pfEmail').value.trim(), bio: qs('#pfBio').value.trim() };
+      const input = qs('#pfAvatar'); if(input.files && input.files[0]){
+        const reader = new FileReader(); reader.onload = ()=>{ p.avatar = reader.result; state.profile = p; save(); renderProfile(); closeProfileModal(); };
+        reader.readAsDataURL(input.files[0]);
+      } else { state.profile = p; save(); renderProfile(); closeProfileModal(); }
+    }
+
+    /* --- Init --- */
+    function init(){
+      load(); renderProfile(); renderCalendar(); renderEvents();
+
+      // Buttons
+      qs('#prevBtn').addEventListener('click', ()=>{ state.current = new Date(state.current.getFullYear(), state.current.getMonth()-1,1); renderCalendar(); });
+      qs('#nextBtn').addEventListener('click', ()=>{ state.current = new Date(state.current.getFullYear(), state.current.getMonth()+1,1); renderCalendar(); });
+      qs('#addEvBtn').addEventListener('click', addEvent);
+      qs('#clearFormBtn').addEventListener('click', ()=>{ qs('#evTitle').value=''; qs('#evTime').value=''; qs('#evDesc').value=''; });
+
+      qs('#editProfileBtn').addEventListener('click', openProfileModal);
+      qs('#pfCancel').addEventListener('click', closeProfileModal);
+      qs('#pfSave').addEventListener('click', saveProfile);
+
+      qs('#clearDataBtn').addEventListener('click', ()=>{ if(confirm('Poistetaanko kaikki tallennetut tapahtumat ja profiili?')){ state.events={}; state.profile={}; save(); renderProfile(); renderCalendar(); renderEvents(); } });
+
+      // Delegation for delete/copy
+      document.addEventListener('click', (e)=>{
+        const t = e.target;
+        if(t.dataset.id && t.dataset.date){ deleteEvent(t.dataset.date, Number(t.dataset.id)); }
+        if(t.dataset.copy){ navigator.clipboard?.writeText(t.dataset.copy).then(()=>{ alert('Kopioitu leikepöydälle'); }).catch(()=>{}); }
+      });
+
+      // Avatar preview in profile box when loading saved avatar (done in renderProfile)
+
+      // Make sure selectedDate exists
+      if(!state.selectedDate) state.selectedDate = (new Date()).toISOString().slice(0,10);
+      qs('#selectedDateLabel').textContent = 'Valittu päivä: ' + state.selectedDate;
+    }
+
+    // Run
+    init();
+  </script>
+</body>
+</html>
