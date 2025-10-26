@@ -1,0 +1,6 @@
+@Opiskelijaportaali_HostAddress = http://localhost:5001
+
+GET {{Opiskelijaportaali_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
