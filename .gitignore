@@ -1,1 +1,13 @@
-.vs
+# Visual Studio temporary files and build folders
+bin/
+obj/
+.vs/
+*.user
+*.db
+*.sqlite
+*.log
+*.suo
+*.cache
+*.pdb
+*.tmp
+*.swp
