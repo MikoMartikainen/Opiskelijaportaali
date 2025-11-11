@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Opiskelijaportaali.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!--Sivu hallitsee navigaatiopalkin käyttäjätietoja-->
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+
+        if (currentUser != null)
+        {   // Näytetetään etunimi + sukunimi tai sähköposti jos nimi puuttuu
+            string displayName = !string.IsNullOrEmpty(currentUser.FirstName) && !string.IsNullOrEmpty(currentUser.LastName)
+            ? $"{currentUser.FirstName} {currentUser.LastName}"
+            : currentUser.Email ?? "User";
+            <!-- Käyttäjän nimi ja linkki oman profiilin hallintaan -->
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                    Hello @displayName!
+                </a>
+            </li>
+            <!-- Kirjaudu ulos -painike -->
+            <li class="nav-item">
+                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout"
+                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+                    <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                </form>
+            </li>
+        }
+    }
+    else
+    {
+
+        <!-- Jos käyttäjä ei ole kirjautunut, näytetään Rekisteröidy ja Kirjaudu sisään -->
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+    }
+</ul>
