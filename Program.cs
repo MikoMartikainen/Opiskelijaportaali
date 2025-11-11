@@ -5,76 +5,80 @@ using Opiskelijaportaali.Models;
 
 namespace Opiskelijaportaali
 {
-    //T√§m√§ k√§ynnist√§√§ ASP.NET Core -webpalvelimen, mahdollistaa Swaggerin ja m√§√§rittelee CORS-s√§√§nn√∂t.
+    //T‰m‰ k‰ynnist‰‰ ASP.NET Core -webpalvelimen, mahdollistaa Swaggerin ja m‰‰rittelee CORS-s‰‰nnˆty.
     public class Program
     {
         public static void Main(string[] args)
         {
-var builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(args);
 
             // Palvelut
             builder.Services.AddControllers();
-//Yhteys tietokantaan 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            //Yhteys tietokantaan 
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36)))
             );
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+            // VAATII STOREN, EI VOIDA KƒYTTƒƒ
+            //builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-//Identity-m‰‰ritykset
-builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-{
-    options.SignIn.RequireConfirmedAccount = false;
-})
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders(); 
 
-//MVC ja Razor Pages 
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages(); 
+            // VAATII STOREN, EI VOIDA KƒYTTƒƒ
+            //Identity-m‰‰ritykset
+            //builder.Services.AddDefaultIdentity<Profile>(options =>
+            //{
+            //    options.SignIn.RequireConfirmedAccount = false;
+            //})
+            //.AddEntityFrameworkStores<AppDbContext>()
+            //.AddDefaultTokenProviders();
 
-var app = builder.Build();
+            //MVC ja Razor Pages 
+            builder.Services.AddControllersWithViews();
+            builder.Services.AddRazorPages();
 
-// Middleware-putki
-if (app.Environment.IsDevelopment())
-{
+            var app = builder.Build();
+
+            // Middleware-putki
+            if (app.Environment.IsDevelopment())
+            {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-    app.UseMigrationsEndPoint();
-}
+                //app.UseMigrationsEndPoint();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
+            }
 
             app.UseCors(policy =>
                 policy.AllowAnyOrigin()
                       .AllowAnyMethod()
                       .AllowAnyHeader()
             );
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
-app.UseRouting();
+            app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.MapControllers();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages();
+            app.MapRazorPages();
 
-app.Run();
+            app.Run();
         }
     }
 }

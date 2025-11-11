@@ -1,23 +1,21 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using Opiskelijaportaali.Models;
+
 
 namespace Opiskelijaportaali.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<Profile> _userManager;
+        private readonly SignInManager<Profile> _signInManager;
         private readonly ILogger<IndexModel> _logger;
 
         public IndexModel(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
+            UserManager<Profile> userManager,
+            SignInManager<Profile> signInManager,
             ILogger<IndexModel> logger)
         {
             _userManager = userManager;
@@ -34,10 +32,10 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account.Manage
         public class InputModel
         {
             [Display(Name = "First name")]
-            public string FirstName { get; set; }
+            public string FName { get; set; }
 
             [Display(Name = "Last name")]
-            public string LastName { get; set; }
+            public string LName { get; set; }
 
             [EmailAddress]
             [Display(Name = "Email")]
@@ -49,7 +47,7 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account.Manage
 
             [Display(Name = "Birth date")]
             [DataType(DataType.Date)]
-            public DateTime? BirthDate { get; set; }
+            public DateTime? Bdate { get; set; }
 
             [DataType(DataType.Password)]
             [Display(Name = "New password")]
@@ -61,17 +59,17 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account.Manage
             public string ConfirmPassword { get; set; }
         }
 
-        private async Task LoadAsync(ApplicationUser user)
+        private async Task LoadAsync(Profile user)
         {
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+            //var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
             Input = new InputModel
             {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
+                FName = user.FName,
+                LName = user.LName,
                 Email = user.Email,
-                PhoneNumber = phoneNumber,
-                BirthDate = user.BirthDate
+                PhoneNumber = user.Phone,
+                Bdate = user.Bdate
             };
         }
 
@@ -102,10 +100,10 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account.Manage
             }
 
             // Päivitä käyttäjän perustiedot
-            user.FirstName = Input.FirstName;
-            user.LastName = Input.LastName;
+            user.FName = Input.FName;
+            user.LName = Input.LName;
             user.Email = Input.Email;
-            user.BirthDate = Input.BirthDate;
+            user.Bdate = Input.Bdate;
             await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
 
             var updateResult = await _userManager.UpdateAsync(user);

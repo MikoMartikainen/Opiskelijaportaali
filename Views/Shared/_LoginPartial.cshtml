@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Opiskelijaportaali.Models
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<Profile> SignInManager
+@inject UserManager<Profile> UserManager
 
 <!--Sivu hallitsee navigaatiopalkin käyttäjätietoja-->
 
@@ -12,8 +12,8 @@
 
         if (currentUser != null)
         {   // Näytetetään etunimi + sukunimi tai sähköposti jos nimi puuttuu
-            string displayName = !string.IsNullOrEmpty(currentUser.FirstName) && !string.IsNullOrEmpty(currentUser.LastName)
-            ? $"{currentUser.FirstName} {currentUser.LastName}"
+            string displayName = !string.IsNullOrEmpty(currentUser.FName) && !string.IsNullOrEmpty(currentUser.LName)
+            ? $"{currentUser.FName} {currentUser.LName}"
             : currentUser.Email ?? "User";
             <!-- Käyttäjän nimi ja linkki oman profiilin hallintaan -->
             <li class="nav-item">

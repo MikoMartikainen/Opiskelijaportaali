@@ -5,7 +5,6 @@ using Opiskelijaportaali.Models;
 
 namespace Opiskelijaportaali.Controllers
 {
-    //Tapahtuman tietojen päivitys ei vielä mahdollista
 
     [ApiController]
     [Route("api/[controller]")]

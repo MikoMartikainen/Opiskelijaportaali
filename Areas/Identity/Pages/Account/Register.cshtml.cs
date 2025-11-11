@@ -1,39 +1,29 @@
 ﻿#nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 using Opiskelijaportaali.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Opiskelijaportaali.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]//Ei vaadi kirjautumista
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserStore<ApplicationUser> _userStore;
-        private readonly IUserEmailStore<ApplicationUser> _emailStore;
+        private readonly SignInManager<Profile> _signInManager;
+        private readonly UserManager<Profile> _userManager;
+        private readonly IUserStore<Profile> _userStore;
+        private readonly IUserEmailStore<Profile> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
 
         //Konstruktorissa injektoidaan tarvittavat palvelut
         public RegisterModel(
-            UserManager<ApplicationUser> userManager,
-            IUserStore<ApplicationUser> userStore,
-            SignInManager<ApplicationUser> signInManager,
+            UserManager<Profile> userManager,
+            IUserStore<Profile> userStore,
+            SignInManager<Profile> signInManager,
             ILogger<RegisterModel> logger)
         {
             _userManager = userManager;
@@ -55,11 +45,11 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account
         {
             [Required]
             [Display(Name = "First Name")]
-            public string FirstName { get; set; }
+            public string FName { get; set; }
 
             [Required]
             [Display(Name = "Last Name")]
-            public string LastName { get; set; }
+            public string LName { get; set; }
 
             [Required]
             [EmailAddress]
@@ -94,8 +84,8 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account
                 var user = CreateUser();
 
                 // Tallennetaan etu- ja sukunimi
-                user.FirstName = Input.FirstName;
-                user.LastName = Input.LastName;
+                user.FName = Input.FName;
+                user.LName = Input.LName;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -117,26 +107,26 @@ namespace Opiskelijaportaali.Areas.Identity.Pages.Account
 
             return Page();
         }
-        // Luo uuden ApplicationUser-instanssin
-        private ApplicationUser CreateUser()
+        // Luo uuden Profile-instanssin
+        private Profile CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<ApplicationUser>();
+                return Activator.CreateInstance<Profile>();
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. Ensure that it has a parameterless constructor.");
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(Profile)}'. Ensure that it has a parameterless constructor.");
             }
         }
         // Hakee sähköpostitallennuksen käyttäjätallennuksesta
-        private IUserEmailStore<ApplicationUser> GetEmailStore()
+        private IUserEmailStore<Profile> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<ApplicationUser>)_userStore;
+            return (IUserEmailStore<Profile>)_userStore;
         }
     }
 }
